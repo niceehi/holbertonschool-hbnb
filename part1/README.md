@@ -1,3 +1,6 @@
+Вот полностью готовый, финальный **README.md** со всеми тремя задачами, исправленный и собранный в один документ (можно сразу сдавать):
+
+---
 
 ````markdown
 # HBnB Evolution – Technical Documentation
@@ -18,12 +21,11 @@ The system is based on a three-layer architecture and uses the Facade design pat
 
 # 1. High-Level Architecture (Package Diagram)
 
-## Overview
+## 1.1 Overview
 
-This section describes the global structure of the application and how its components are organized into layers.
+This section describes the global structure of the application.
 
-The system is divided into three main layers:
-
+The system is divided into three layers:
 - Presentation Layer
 - Business Logic Layer
 - Persistence Layer
@@ -32,7 +34,7 @@ A Facade is used as a single entry point between layers to simplify communicatio
 
 ---
 
-## Layers Description
+## 1.2 Layers Description
 
 ### Presentation Layer
 Responsible for handling user requests.
@@ -41,7 +43,7 @@ Includes:
 - API endpoints
 - Services
 
-This layer does not contain business logic. It only forwards requests.
+This layer does not contain business logic. It only forwards requests to the Facade.
 
 ---
 
@@ -55,9 +57,9 @@ Includes:
 - Amenity
 
 Responsible for:
-- business rules
-- validation
-- relationships between entities
+- applying business rules
+- managing relationships between entities
+- processing application logic
 
 ---
 
@@ -70,20 +72,26 @@ Includes:
 
 ---
 
-## Facade Pattern
+## 1.3 Facade Pattern
 
-The Facade acts as a single interface between the Presentation Layer and the Business Logic Layer.
+The Facade acts as a single interface between the API and the business logic.
 
-Instead of multiple direct calls, all requests go through the Facade.
+Instead of multiple direct calls:
+- API → User
+- API → Place
+- API → Review
+
+We use:
+- API → Facade → Business Logic
 
 This improves:
+- simplicity
 - maintainability
-- readability
 - separation of concerns
 
 ---
 
-## Package Diagram
+## 1.4 Package Diagram
 
 ```mermaid
 graph TD
@@ -124,21 +132,30 @@ Repository --> Database
 
 ---
 
+## 1.5 Summary
+
+* System is divided into 3 layers
+* API does not access business logic directly
+* Facade is the single entry point
+* Data is stored in a separate persistence layer
+
+---
+
 # 2. Business Logic Layer (Class Diagram)
 
-## Overview
+## 2.1 Overview
 
-This layer defines the main entities of the system and their relationships.
+This layer defines the core entities of the system and their relationships.
 
 Each entity includes:
 
-* unique identifier (UUID)
+* UUID as unique identifier
 * creation timestamp
 * update timestamp
 
 ---
 
-## Class Diagram
+## 2.2 Class Diagram
 
 ```mermaid
 classDiagram
@@ -189,34 +206,34 @@ Place "*" --> "*" Amenity : includes
 
 ---
 
-## Summary
+## 2.3 Summary
 
 * A User can own multiple Places
 * A User can write multiple Reviews
 * A Place can have multiple Reviews
 * A Place can include multiple Amenities
-* An Amenity can belong to multiple Places
+* Amenities can be shared across Places
 
 ---
 
 # 3. Sequence Diagrams (API Calls)
 
-## Overview
+## 3.1 Overview
 
-This section describes how requests are processed through the system step by step.
+This section shows how requests move through the system step by step.
 
-Each request follows the same flow:
+All requests follow the same flow:
 
 1. User sends request to API
 2. API forwards request to Facade
-3. Facade sends it to Business Logic
+3. Facade calls Business Logic
 4. Business Logic interacts with Persistence Layer
 5. Database processes data
-6. Response is returned to the user
+6. Response is returned to user
 
 ---
 
-## 3.1 User Registration
+## 3.2 User Registration
 
 ```mermaid
 sequenceDiagram
@@ -226,19 +243,19 @@ participant Facade
 participant BusinessLogic
 participant DB
 
-User->>API: Send registration data
+User->>API: Register request
 API->>Facade: Forward request
 Facade->>BusinessLogic: Create user
 BusinessLogic->>DB: Save user
 DB-->>BusinessLogic: Confirmation
-BusinessLogic-->>Facade: Success response
-Facade-->>API: Return response
+BusinessLogic-->>Facade: Success
+Facade-->>API: Response
 API-->>User: Registration successful
 ```
 
 ---
 
-## 3.2 Place Creation
+## 3.3 Place Creation
 
 ```mermaid
 sequenceDiagram
@@ -253,14 +270,14 @@ API->>Facade: Forward request
 Facade->>BusinessLogic: Create place
 BusinessLogic->>DB: Save place
 DB-->>BusinessLogic: Confirmation
-BusinessLogic-->>Facade: Success response
-Facade-->>API: Return response
+BusinessLogic-->>Facade: Success
+Facade-->>API: Response
 API-->>User: Place created
 ```
 
 ---
 
-## 3.3 Review Submission
+## 3.4 Review Submission
 
 ```mermaid
 sequenceDiagram
@@ -275,14 +292,14 @@ API->>Facade: Forward request
 Facade->>BusinessLogic: Create review
 BusinessLogic->>DB: Save review
 DB-->>BusinessLogic: Confirmation
-BusinessLogic-->>Facade: Success response
-Facade-->>API: Return response
+BusinessLogic-->>Facade: Success
+Facade-->>API: Response
 API-->>User: Review submitted
 ```
 
 ---
 
-## 3.4 Fetch Places List
+## 3.5 Fetch Places List
 
 ```mermaid
 sequenceDiagram
@@ -295,22 +312,15 @@ participant DB
 User->>API: Request places list
 API->>Facade: Forward request
 Facade->>BusinessLogic: Get places
-BusinessLogic->>DB: Retrieve data
+BusinessLogic->>DB: Fetch data
 DB-->>BusinessLogic: Return data
 BusinessLogic-->>Facade: Process result
-Facade-->>API: Return response
+Facade-->>API: Response
 API-->>User: List of places
 ```
 
 ---
+
 ```
 
----
 
-Если хочешь дальше, могу:
-- :contentReference[oaicite:0]{index=0}
-- или :contentReference[oaicite:1]{index=1}
-- или :contentReference[oaicite:2]{index=2}
-
-Скажи 👍
-```
