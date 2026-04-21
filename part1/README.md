@@ -1,70 +1,58 @@
 
-# HBnB Evolution – Technical Documentation
+# HBnB Technical Documentation
 
-## Introduction
-
-This document describes the architecture and design of the HBnB Evolution application, a simplified system similar to Airbnb.
-
-The purpose of this documentation is to define how the system is structured before implementation. It explains:
-
-- system architecture (layers)
-- communication between components
-- request processing flow
-
-The system uses a **three-layer architecture** and a **Facade design pattern**.
+This document outlines the architectural blueprint, core business logic, and data flow for the HBnB application. Designed as a scalable vacation rental platform, the system relies on strict separation of concerns to ensure that the codebase remains maintainable and extensible as new features are introduced.
 
 ---
 
-# 1. High-Level Architecture (Package Diagram)
+# 1. High-Level Architecture
 
-## Overview
+The application is built using a **3-tier architecture**, ensuring clear separation between presentation, business logic, and data persistence. To avoid tight coupling between layers, the system uses the **Facade Design Pattern**, which provides a unified interface for all core operations.
 
-The system is divided into three layers:
+## Presentation Layer (API)
+This layer represents the entry point of the system. It is responsible for handling HTTP requests, parsing input data, and returning responses.
 
-- Presentation Layer
-- Business Logic Layer
-- Persistence Layer
-
-A Facade is used as a single entry point between layers.
+It does not contain any business logic. Its only responsibility is communication with external clients.
 
 ---
 
-## Layers Description
+## Business Logic Layer (Services & Models)
+This layer represents the core of the system.
 
-### Presentation Layer
-Handles user requests:
-- API endpoints
-- Services
+It is responsible for:
+- enforcing business rules
+- validating input data
+- processing application logic
+- managing relationships between entities
 
-Does not contain business logic.
-
----
-
-### Business Logic Layer
-Core system logic:
-- User
-- Place
-- Review
-- Amenity
-
-Responsible for rules, validation, and relationships.
+All requests from the API pass through the Facade before reaching this layer.
 
 ---
 
-### Persistence Layer
-Handles data storage:
-- Repository
-- Database
+## Persistence Layer (Repositories)
+This layer abstracts all database operations.
+
+It is responsible for:
+- storing data
+- retrieving data
+- updating records
+- deleting records
+
+The business logic layer never interacts directly with the database. All operations go through repositories.
 
 ---
 
 ## Facade Pattern
 
-All communication goes through Facade:
+The Facade acts as a centralized interface between the API and the business logic layer.
 
-API → Facade → Business Logic → Persistence
+Instead of multiple direct calls to different services or models, the API interacts with a single entry point.
 
-This reduces coupling and improves maintainability.
+For example:
+- API → Facade → create_place()
+- API → Facade → create_user()
+
+The Facade internally coordinates all required operations across services and repositories.
 
 ---
 
@@ -109,17 +97,42 @@ Repository --> Database
 
 ---
 
-# 2. Business Logic Layer (Class Diagram)
+# 2. Business Logic Layer & Domain Models
 
-## Overview
+The domain layer represents the real-world entities of the HBnB system.
 
-Defines system entities and relationships.
+Each entity is uniquely identified using a **UUID4**, ensuring global uniqueness across the system. Additionally, all entities track lifecycle metadata such as creation and update timestamps.
 
-Each entity contains:
+This ensures consistency, traceability, and auditability across the application.
 
-* UUID
-* created_at
-* updated_at
+---
+
+## Entity Relationships
+
+### User & Place (One-to-Many)
+
+A user can own multiple places. Each place contains a reference to its owner through a foreign key relationship.
+
+---
+
+### User, Place & Review
+
+The Review entity acts as a linking entity between a User and a Place.
+
+It represents a user’s feedback on a specific place and includes:
+
+* rating
+* comment
+
+Each review belongs to exactly one user and one place.
+
+---
+
+### Place & Amenity (Many-to-Many)
+
+A place can have multiple amenities, and an amenity can belong to multiple places.
+
+This relationship allows reuse of common features such as Wi-Fi, parking, or pool access across different listings.
 
 ---
 
@@ -174,27 +187,13 @@ Place "*" --> "*" Amenity : includes
 
 ---
 
-## Summary
+# 3. API Interaction Flow
 
-* User owns multiple places
-* User writes multiple reviews
-* Place has multiple reviews
-* Place has multiple amenities
+All interactions between the client and the system follow a strict layered flow.
 
----
+Direct communication between the API and the database is not allowed. Instead, all operations pass through the Facade and Business Logic layers.
 
-# 3. Sequence Diagrams (API Calls)
-
-## Overview
-
-All requests follow the same flow:
-
-1. User sends request to API
-2. API sends request to Facade
-3. Facade calls Business Logic
-4. Business Logic uses Persistence Layer
-5. Database returns data
-6. Response goes back to user
+Before executing any write operation, the system validates related entities to ensure data integrity and prevent invalid references.
 
 ---
 
@@ -212,7 +211,7 @@ User->>API: Register request
 API->>Facade: Forward request
 Facade->>BusinessLogic: Create user
 BusinessLogic->>DB: Save user
-DB-->>BusinessLogic: OK
+DB-->>BusinessLogic: Confirmation
 BusinessLogic-->>Facade: Success
 Facade-->>API: Response
 API-->>User: Registration successful
@@ -234,7 +233,7 @@ User->>API: Create place
 API->>Facade: Forward request
 Facade->>BusinessLogic: Create place
 BusinessLogic->>DB: Save place
-DB-->>BusinessLogic: OK
+DB-->>BusinessLogic: Confirmation
 BusinessLogic-->>Facade: Success
 Facade-->>API: Response
 API-->>User: Place created
@@ -256,7 +255,7 @@ User->>API: Submit review
 API->>Facade: Forward request
 Facade->>BusinessLogic: Create review
 BusinessLogic->>DB: Save review
-DB-->>BusinessLogic: OK
+DB-->>BusinessLogic: Confirmation
 BusinessLogic-->>Facade: Success
 Facade-->>API: Response
 API-->>User: Review submitted
@@ -264,7 +263,7 @@ API-->>User: Review submitted
 
 ---
 
-## Fetch Places List
+## Fetch Places
 
 ```mermaid
 sequenceDiagram
@@ -274,11 +273,11 @@ participant Facade
 participant BusinessLogic
 participant DB
 
-User->>API: Get places list
+User->>API: Fetch places
 API->>Facade: Forward request
-Facade->>BusinessLogic: Fetch places
-BusinessLogic->>DB: Retrieve data
-DB-->>BusinessLogic: Return data
+Facade->>BusinessLogic: Retrieve places
+BusinessLogic->>DB: Query data
+DB-->>BusinessLogic: Return results
 BusinessLogic-->>Facade: Process data
 Facade-->>API: Response
 API-->>User: List of places
